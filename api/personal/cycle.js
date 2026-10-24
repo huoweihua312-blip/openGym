@@ -43,16 +43,18 @@ export function cycleView(S, today) {
   let slot = c.id, index = 0, readyOn = c.startedOn, ordinal = 0
   const accepted = [], conflicts = [], seen = new Set()
   const events = Object.values(S.personalEvents || {}).filter(e => e?.cycleId === c.id)
+  const byParent = new Map(), routines = new Map(list(S.routines).map(r => [r.id, r])), workouts = new Map(list(S.workouts).map(w => [w.id, w]))
+  for (const e of events) { if (!byParent.has(e.parent)) byParent.set(e.parent, []); byParent.get(e.parent).push(e) }
   while (!seen.has(slot)) {
     seen.add(slot)
-    const choices = events.filter(e => {
-      if (e.parent !== slot || !e.id || !validDay(e.day) || e.day < readyOn || e.day > today) return false
+    const choices = (byParent.get(slot) || []).filter(e => {
+      if (!e.id || e.id === slot || !validDay(e.day) || e.day > today) return false
       if (e.type === 'correct') return Number.isInteger(e.index) && e.index >= 0 && e.index < 4 && String(e.reason || '').trim().length > 0
+      if (e.day < readyOn) return false
       if (index === 3) return e.type === 'rest'
       if (e.type !== 'complete') return false
-      const r = list(S.routines).find(r => r.id === c.ids[index])
-      const w = list(S.workouts).find(w => w.id === e.workoutId && w.personalSlot === slot && w.d === e.day)
-      return !!w && !!r && list(w.routineIds).includes(c.ids[index]) && sessionComplete(w, w.personalPlan || r)
+      const r = routines.get(c.ids[index]), w = workouts.get(e.workoutId)
+      return !!w && !!r && w.personalSlot === slot && w.d === e.day && list(w.routineIds).includes(c.ids[index]) && sessionComplete(w, w.personalPlan || r)
     }).sort((x, y) => (x.at || 0) - (y.at || 0) || x.id.localeCompare(y.id))
     const e = choices[0]
     if (!e) break

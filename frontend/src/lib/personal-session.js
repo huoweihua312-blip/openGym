@@ -6,9 +6,9 @@ export const LABELS = { '0289': '平板哑铃卧推', '0314': '上斜哑铃卧�
 const cfg = (id, weight, sets, min, max, extra = {}) => ({ id, weight, sets, repsMin: min, reps: max, rest: 90,
   mode: 'reps', required: true, warmupSets: 1, dbLoad: 'each', ...extra })
 export function installPersonalPlan(S, { id, today, now }) {
+  if (S.unit !== 'kg') throw Error('此模板按 kg 编写；请先在设置中切换 kg，已有数据由原有单位转换流程处理。')
   S.personalMode = true
   if (S.personalCycle) return
-  if (S.unit !== 'kg') throw Error('此模板按 kg 编写；请先在设置中切换 kg，已有数据由原有单位转换流程处理。')
   const routines = [
     { name: 'Push', ex: [cfg('0289', 14.7, 4, 8, 12), cfg('0314', 14.7, 3, 8, 12), cfg('0259', 0, 2, 8, 15, { bodyweight: true }), cfg('3145', 0, 2, 12, 15, { bodyweight: true })] },
     { name: 'Pull', ex: [cfg('0652', 0, 4, 6, 8, { bodyweight: true }), cfg('0292', 14.7, 4, 20, 30, { side: true }), cfg('0294', 7.5, 3, 10, 12)] },

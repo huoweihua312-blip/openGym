@@ -38,3 +38,5 @@ backups/
 deploy/personal/.env*
 !deploy/personal/.env.example
 *.personal-backup/
+.venv/
+__pycache__/

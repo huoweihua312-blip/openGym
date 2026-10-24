@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { STEPS, nextDay, validDay, cycleView, advanceCycle, sessionComplete, mergePersonalMap } from '../../../api/personal/cycle.js'
 import { installPersonalPlan, startPersonalSession, personalSession, recordPersonalSet, finishPersonalSession } from './personal-session.js'
 import { symmetricLoads, availableWeights, defaultEquipment, calibrationWarning, validateEquipment, loadChangeCost, recommendLoad } from './personal-equipment.js'
-import { personalAdvice } from './personal-progression.js'
+import { personalAdvice, decidePersonalAdvice } from './personal-progression.js'
 import { mergeStates, stampChange } from './sync-merge.js'
 import { effectiveRoutineIds } from './history.js'
 import { effectiveRoutineId } from '../../../api/queue.js'
@@ -95,10 +95,10 @@ describe('个人循环、完成与恢复', () => {
     for (const patch of [{ w: -1 }, { r: Infinity }, { rir: 12 }, { quality: '猜测' }, { r: 0, done: true }]) expect(() => recordPersonalSet(s, 'cycle', 0, 1, 'both', patch, 2, TODAY)).toThrow()
   })
   it('前端、提醒和原 Rotation 都尊重个人循环', () => {
-    const s = state(); expect(effectiveRoutineIds(s, TODAY)).toEqual([s.routines[0].id]); expect(effectiveRoutineId(s, TODAY)).toBe(s.routines[0].id)
+    const s = state(); expect(effectiveRoutineIds(s, TODAY, TODAY)).toEqual([s.routines[0].id]); expect(effectiveRoutineId(s, TODAY)).toBe(s.routines[0].id)
     expect(refillAfter(s, {})).toBe(false)
     complete(s, 'p'); complete(s, 'q'); complete(s, 'r')
-    expect(effectiveRoutineIds(s, TODAY)).toEqual([]); expect(effectiveRoutineId(s, TODAY)).toBe(null)
+    expect(effectiveRoutineIds(s, TODAY, TODAY)).toEqual([]); expect(effectiveRoutineId(s, TODAY)).toBe(null)
   })
 })
 describe('同步与幂等', () => {
@@ -173,6 +173,18 @@ describe('可追溯进阶', () => {
     const s = { workouts: [workout('20', [12, 12])] }, before = structuredClone(s)
     const x = personalAdvice(s, c, 'r', { ...p, fixed: [7.5, 8] })
     expect(x).toMatchObject({ kind: 'weight', weight: 8 }); expect(s).toEqual(before)
+  })
+  it('只有用户采用才更新下次目标；决定保存证据，重复采用幂等', () => {
+    const s = { workouts: [workout('20', [12, 12])], routines: [{ id: 'r', ex: [{ ...c, weight: 7.5 }] }], personalEquipment: { ...p, fixed: [7.5, 8] } }
+    const d = decidePersonalAdvice(s, 'r', 'x', 'accept', 30)
+    expect(s.routines[0].ex[0].weight).toBe(8); expect(d.evidence).toEqual(['20'])
+    expect(decidePersonalAdvice(s, 'r', 'x', 'accept', 31)).toEqual(d)
+  })
+  it('忽略建议不会改变目标或历史', () => {
+    const s = { workouts: [workout('20', [12, 12])], routines: [{ id: 'r', ex: [{ ...c, weight: 7.5 }] }], personalEquipment: p }
+    const before = structuredClone(s.workouts)
+    expect(decidePersonalAdvice(s, 'r', 'x', 'ignore', 31).action).toBe('ignore')
+    expect(s.routines[0].ex[0].weight).toBe(7.5); expect(s.workouts).toEqual(before)
   })
   it('相同重量连续两次下降提醒检查恢复，不诊断身体状态', () => {
     const x = personalAdvice({ workouts: [workout('20', [12, 12]), workout('21', [11, 10]), workout('22', [9, 9])] }, c, 'r', p)

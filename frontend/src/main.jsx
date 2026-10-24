@@ -27,7 +27,8 @@ startMediaSync(useStore)
 startNativeKeyboard()
 
 // Not in the mobile build: the native shell already serves everything from disk.
-if (!MOBILE && 'serviceWorker' in navigator && location.protocol === 'https:') {
+// localhost 是浏览器认可的安全上下文，独立本地测试也可验证离线；普通 HTTP 内网地址仍不可用。
+if (!MOBILE && 'serviceWorker' in navigator && globalThis.isSecureContext) {
   navigator.serviceWorker.register('sw.js').catch(() => {})
   // The plan's exercise media, kept by the worker for a workout opened without a network (#281).
   // It only fetches ahead while the page runs as the installed app; a tab keeps what it has shown.

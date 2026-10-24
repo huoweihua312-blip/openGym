@@ -393,6 +393,7 @@ export function profileLines(p) {
  * only moves if you asked it to.
  */
 export function applyCreatedPlan(s, proposal, { schedule } = {}) {
+  if (s.personalMode && s.personalCycle) throw new Error('个人循环运行中：请在个人设置中关闭个人模式后，再确认应用 AI 计划。训练历史将保留。')
   validateProposal(proposal)
   pushSnapshot(s, proposal.id, t('Before the Coach’s plan'))
   const bundle = proposal.bundle
@@ -551,6 +552,7 @@ function need(x) { if (!x) throw new Error('missing target'); return x }
  * change-set, ever.
  */
 export function applyChangeSet(s, proposal, acceptedIds) {
+  if (s.personalMode && s.personalCycle) throw new Error('个人循环运行中：AI 仅提供草案。关闭个人模式后可确认应用，避免绕过完成和休息规则。')
   validateProposal(proposal)
   const accepted = new Set(acceptedIds || [])
   const changes = (proposal.changes || []).filter(c => accepted.has(c.id) && c.status !== 'stale')

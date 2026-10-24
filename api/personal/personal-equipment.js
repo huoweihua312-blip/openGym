@@ -1,4 +1,4 @@
-export const defaultEquipment = () => ({ version: 1, name: '家庭器材', handleKg: null,
+export const defaultEquipment = () => ({ version: 1, kind: 'plate-loaded', name: '家庭器材', handleKg: null,
   plates: [{ kg: 3, count: 8 }, { kg: 2, count: 4 }, { kg: 1.25, count: 4 }],
   fixed: [7.5], other: ['引体杆', '弹力带', '健腹轮'],
   measurements: [
@@ -8,6 +8,7 @@ export const defaultEquipment = () => ({ version: 1, name: '家庭器材', handl
 const key = side => [...side].sort((a, b) => b - a).join(',')
 export function validateEquipment(p) {
   if (!p || !Array.isArray(p.plates) || !Array.isArray(p.fixed) || !Array.isArray(p.measurements)) throw Error('器材档案结构不完整')
+  if (p.kind != null && !['plate-loaded', 'selectorized'].includes(p.kind)) throw Error('器材类型不支持')
   if (p.plates.length > 8 || p.fixed.length > 100 || p.measurements.length > 100) throw Error('器材记录过多')
   if (p.handleKg != null && (!Number.isFinite(p.handleKg) || p.handleKg < 0 || p.handleKg > 50)) throw Error('杆重必须为空或有效实测值')
   const seen = new Set()

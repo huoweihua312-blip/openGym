@@ -31,3 +31,22 @@ export function personalAdvice(S, cfg, routineId, equipment) {
     reason: `下一可用重量 ${next} kg，跨度超过 15%；先增加次数，不自动跳重。`, evidence }
   return { kind: 'weight', weight: next, reason: `全部计划组达到次数上限，质量良好且 RIR≥1；器材支持 ${next} kg，建议下次尝试。`, evidence }
 }
+
+export function decidePersonalAdvice(S, routineId, exerciseId, action, now) {
+  if (!['accept', 'ignore'].includes(action)) throw Error('建议操作无效')
+  const routine = S.routines?.find(r => r.id === routineId), cfg = routine?.ex?.find(c => c.id === exerciseId)
+  if (!cfg || !Number.isFinite(now)) throw Error('动作或时间无效')
+  const advice = personalAdvice(S, cfg, routineId, S.personalEquipment)
+  const evidence = advice.evidence.map(e => e.workoutId)
+  if (!evidence.length) throw Error('没有训练证据，不能记录进阶决定')
+  const key = `${routineId}|${exerciseId}|${evidence.at(-1)}`
+  if (S.personalDecisions?.[key]) return S.personalDecisions[key]
+  if (action === 'accept') {
+    if (advice.kind !== 'weight' || !availableWeights(S.personalEquipment, cfg.side ? 1 : 2).includes(advice.weight)) throw Error('当前没有合法的加重建议')
+    // 只改下次目标；已开始的训练使用自己的计划快照，不随建议跳动。
+    cfg.weight = advice.weight
+  }
+  const record = { action, weight: advice.weight ?? null, reason: advice.reason, evidence, _ts: now }
+  S.personalDecisions = { ...S.personalDecisions, [key]: record }
+  return record
+}

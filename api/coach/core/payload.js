@@ -11,6 +11,7 @@
  * and appearance settings, and every other profile's everything.
  */
 import { glyphStr } from './glyphs.js';
+import { personalCoachContext } from '../../personal/coach-context.js';
 import { LIBRARY, LIB_BY_ID, libraryHas, libraryName, librarySlice, isStretch, MAX_LIBRARY } from './library.js';
 
 export const CONTRACT = 1;
@@ -499,6 +500,8 @@ export function build(S, opts = {}) {
     coachProfile: profile && typeof profile === 'object' ? cleanProfile(profile) : null,
     plan: cleanPlan(S)
   };
+  const personalRules = personalCoachContext(S, p.meta.today);
+  if (personalRules) p.personalRules = personalRules;
   // Someone who set up a home gym under Settings → Equipment and left the Coach's own equipment
   // question empty was handed the whole catalogue, leverage machines and all. The profile they
   // are filtering the app with is the better answer than "everything".
