@@ -30,3 +30,11 @@ frontend/bundle-size.json
 
 # Local planning notes
 docs/superpowers/plans/
+
+# 个人版合成测试数据、缓存和敏感备份不进入公开仓库
+.test-tmp/
+.local-test/
+backups/
+deploy/personal/.env*
+!deploy/personal/.env.example
+*.personal-backup/

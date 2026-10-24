@@ -26,6 +26,8 @@
 // skips it. A pin on a past day is stale (the session floats again), and a pin on a done session
 // is fulfilled (`pinState === 'done'`) and reads as no override at all. Pins change which session
 // is NEXT, never what counts as DONE, so the tally a planner reads is untouched.
+import { cycleView } from './personal/cycle.js';
+
 function routineIdsOf(w) {
   return Array.isArray(w.routineIds) ? w.routineIds : (w.routineId ? [w.routineId] : []);
 }
@@ -119,6 +121,10 @@ export function pinState(S, id) {
 // next session wins over the plain weekday assignment, falling back to the weekday only once the
 // queue is finished, not yet started, or absent.
 export function effectiveRoutineId(S, iso) {
+  if (S.personalMode && S.personalCycle) {
+    const v = cycleView(S, iso);
+    return v && !v.waiting ? v.routineId : null;
+  }
   const ov = S.dayPlan?.[iso];
   if (ov === 'rest') return null;
   const pin = pinState(S, ov);
