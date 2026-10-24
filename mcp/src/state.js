@@ -108,6 +108,9 @@ export function init() {
     // moment there is a state file to watch. Most clients kill the child anyway, but one that
     // merely closes the pipe would leak a process per session. Watching is unaffected: the
     // stdio transport is what keeps the loop alive while a client is actually attached.
+    // Windows 或网络盘可能在 watch 建立后异步报错；继续使用已有 mtime 回退。
+    const watched = _watcher
+    watched.on('error', () => { watched.close(); if (_watcher === watched) _watcher = null; _state = undefined })
     _watcher.unref()
   } catch { /* fs.watch unsupported on this platform; tools will re-read on mtime change */ }
 }

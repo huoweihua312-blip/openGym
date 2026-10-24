@@ -73,7 +73,7 @@ export function planPacks({ qualities, srcFor, sizeOf, catalogue = EXDB, limit =
         ids = [...new Set([probe, ...ids.slice(0, limit)])].filter(Boolean)
       }
       const files = ids.map(id => {
-        const src = path.join(srcFor(px), `${id}.webp`)
+        const src = path.join(srcFor(px), `${id}.webp`).replaceAll('\\', '/')
         const bytes = sizeOf(src)
         if (bytes == null) throw new Error(`missing ${px} px drawing ${id} (${src})`)
         return { id, src, bytes }

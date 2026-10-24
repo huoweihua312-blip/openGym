@@ -63,7 +63,7 @@ const unwritable = h => fs.chmodSync(h.dataDir, 0o500);
 // Root writes through a 0500 directory, so the failure these tests need cannot be made as root
 // (the GitLab CI container runs as root); they are skipped there rather than failing for it.
 const asRoot = typeof process.getuid === 'function' && process.getuid() === 0;
-const skip = asRoot ? 'running as root: a 0500 directory is still writable' : false;
+const skip = process.platform === 'win32' ? 'POSIX chmod denial requires Linux; Windows uses ACLs' : asRoot ? 'running as root: a 0500 directory is still writable' : false;
 const writable = h => fs.chmodSync(h.dataDir, 0o700);
 
 test('an unwritable ./data cannot take the process down through the rest timer nobody awaits', { skip }, async t => {
