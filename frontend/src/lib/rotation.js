@@ -198,6 +198,7 @@ const rotate = (seq, afterId) => {
  * credited: `[A,B,C]` closed by C repeats as `[A,B,C]`, closed by B becomes `[C,A,B]`.
  */
 export function refillAfter(s, w, today = todayISO(), now = Date.now()) {
+  if (s.personalMode && s.personalCycle) return false
   const q = queueOf(s)
   if (!q?.rotationId || !s.rotation?.id || q.rotationId !== s.rotation.id) return false
   if (!queueView(s, today)?.complete) return false
@@ -222,6 +223,7 @@ export function refillAfter(s, w, today = todayISO(), now = Date.now()) {
  * it refilled; anything else (no managed pass, an incomplete one) is left alone.
  */
 export function refillIfComplete(s, today = todayISO(), now = Date.now()) {
+  if (s.personalMode && s.personalCycle) return false
   const q = queueOf(s)
   if (!q?.rotationId || !s.rotation?.id || q.rotationId !== s.rotation.id) return false
   if (!queueView(s, today)?.complete) return false

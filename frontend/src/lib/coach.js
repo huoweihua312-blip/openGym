@@ -19,6 +19,7 @@ import { mergePlan } from './plan-share.js'
 import { deleteRoutine } from './routines.js'
 import { POLICIES } from './progression.js'
 import { t, tn } from './i18n.js'
+import { validatePersonalChanges } from '../../../api/personal/coach-policy.js'
 
 // Bumping this re-prompts everyone: it means what we share, or who we share it with, changed.
 // 2: the training line names the session notes, which the payload carries and version 1 never
@@ -393,6 +394,7 @@ export function profileLines(p) {
  * only moves if you asked it to.
  */
 export function applyCreatedPlan(s, proposal, { schedule } = {}) {
+  if (s.personalMode && s.personalCycle) throw new Error('个人循环运行中：请在个人设置中关闭个人模式后，再确认应用 AI 计划。训练历史将保留。')
   validateProposal(proposal)
   pushSnapshot(s, proposal.id, t('Before the Coach’s plan'))
   const bundle = proposal.bundle
@@ -555,6 +557,8 @@ export function applyChangeSet(s, proposal, acceptedIds) {
   const accepted = new Set(acceptedIds || [])
   const changes = (proposal.changes || []).filter(c => accepted.has(c.id) && c.status !== 'stale')
   if (!changes.length) return { applied: 0 }
+
+  validatePersonalChanges(s, changes)
 
   pushSnapshot(s, proposal.id, t('Before the Coach’s changes'))
   const applied = []

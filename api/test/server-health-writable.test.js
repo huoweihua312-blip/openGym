@@ -53,6 +53,7 @@ test('a writable data directory answers 200, and says so', async t => {
 });
 
 test('a data directory the server cannot write to is 503, not healthy', async t => {
+  if (process.platform === 'win32') { t.skip('POSIX chmod denial requires Linux; Windows uses ACLs'); return; }
   if (typeof process.getuid === 'function' && process.getuid() === 0) {
     t.skip('running as root: a mode that denies writes does not deny them to root');
     return;

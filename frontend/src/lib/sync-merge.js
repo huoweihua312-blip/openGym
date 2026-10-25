@@ -77,6 +77,7 @@ import { beatsWeight } from './exercises.js'
 import { bestWeightForEntry } from './history.js'
 import { convertStateUnit, convertBodyWeight } from './units.js'
 import { sanitizeAccent } from './accent.js'
+import { mergePersonalMap } from '../../../api/personal/cycle.js'
 import { readDayNote as readNote } from './day-notes.js'
 
 const clone = o => JSON.parse(JSON.stringify(o))
@@ -84,7 +85,7 @@ const list = v => (Array.isArray(v) ? v : [])
 // The maps whose every entry carries its own edit time (mergeStampedMap). dayNotes is a day's
 // note on a day off (lib/day-notes.js), one entry per date.
 // dayPhotos is a progress photo filed under a day (lib/day-photos.js), one entry per photo.
-export const STAMPED_MAPS = ['balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'dayNotes', 'dayPhotos']
+export const STAMPED_MAPS = ['balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'dayNotes', 'dayPhotos', 'personalEvents', 'personalSessions', 'personalSets', 'personalDecisions']
 
 /** The copy with the later `_ts`; on a tie the first argument (callers pass local first). */
 export const newerOf = (a, b) => ((b?._ts || 0) > (a?._ts || 0) ? b : a)
@@ -613,7 +614,7 @@ function applyDeletions(S, deleted) {
 const OWN_MERGE = new Set([
   '_ts', '_rev', '_wid', '_wids', '_unstamped', '_prior', 'active', 'unit', 'unitSet', 'resetAt', 'resetIds', 'deleted', 'edited', 'undone', 'routineOrder',
   'workouts', 'routines', 'customEx', 'equipProfiles', 'gymCards', 'bodyweight', 'measurements', 'favEx',
-  'exWeights', 'balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'dayNotes', 'dayPhotos',
+  'exWeights', 'balanceOverrides', 'loadKind', 'plates', 'dbLoad', 'dumbbells', 'dayNotes', 'dayPhotos', 'personalEvents', 'personalSessions', 'personalSets', 'personalDecisions',
 ])
 // Stamped per key instead of whole: one day of the plan, one exercise's note or bar.
 const PER_KEY = new Set(['week', 'dayPlan', 'exNotes', 'barWeights'])
@@ -851,7 +852,7 @@ export function mergeStates(a0, b0, { prefer } = {}) {
   // a unit's plate inventory are each one choice, made on one device, that a later set logged on
   // the other must not undo.
   for (const f of STAMPED_MAPS) {
-    if (n[f] || o[f]) out[f] = clone(mergeStampedMap(n[f], o[f], prefer))
+    if (n[f] || o[f]) out[f] = clone(f.startsWith('personal') && !prefer ? mergePersonalMap(n[f], o[f]) : mergeStampedMap(n[f], o[f], prefer))
   }
   // Each stamped setting and plan day from the copy that changed it last (the `edited` section
   // above). `prefer` (sign-in) keeps the preferred side's, stamps and all.

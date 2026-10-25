@@ -1,5 +1,6 @@
 // Pure helpers over the state object S (ported 1:1 from the vanilla app).
 import { syncSupersetMeta } from './superset-meta.js'
+import { cycleView } from '../../../api/personal/cycle.js'
 import { todayISO, isoOf, weekKey, weekStartOf, fmtNum } from './format.js'
 import { fmtSpeed } from './speed.js'
 import { hasIncline, inclineFrom } from './incline.js'
@@ -475,6 +476,10 @@ export function bestWeightFor(S, exId, as) {
  * other days. Once the session is done the pin is fulfilled and the day reads as if unpinned.
  */
 export function effectiveRoutineIds(S, iso, today = todayISO()) {
+  if (S.personalMode && S.personalCycle) {
+    const v = cycleView(S, today)
+    return iso === today && v && !v.waiting && v.routineId ? [v.routineId] : []
+  }
   const ov = S.dayPlan[iso]
   if (ov === 'rest') return []
   const pin = pinState(S, ov)

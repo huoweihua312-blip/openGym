@@ -22,7 +22,7 @@ test('atomicWrite: bytes flushed, then the rename, then the directory', t => {
   atomicWrite(file, '{"_rev":1}', 0o600);
   assert.deepEqual(calls, [['fsync', file + '.tmp'], ['rename', file], ['fsync', dir]]);
   assert.equal(fs.readFileSync(file, 'utf8'), '{"_rev":1}');
-  assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+  if (process.platform !== 'win32') assert.equal(fs.statSync(file).mode & 0o777, 0o600);
 });
 
 test('server.js and media.js write through it', () => {

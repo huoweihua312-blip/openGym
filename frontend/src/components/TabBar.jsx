@@ -29,6 +29,13 @@ export default function TabBar({ onStart }) {
   // Settings lives under (#369, #330).
   const trouble = useConnectionTrouble()
   if (!user && !isGuest) return null
+  if (S.personalMode) return <nav id="tabbar" aria-label="个人导航">
+    <Tab active={loc.pathname === '/personal' && !loc.search} icon="play" label="训练" onClick={() => nav('/personal')} />
+    <Tab active={loc.search.includes('plan')} icon="calendar" label="计划" onClick={() => nav('/personal?section=plan')} />
+    <Tab active={loc.pathname === '/history'} icon="house" label="历史" onClick={() => nav('/history')} />
+    <Tab active={loc.search.includes('analysis')} icon="chart" label="分析" onClick={() => nav('/personal?section=analysis')} />
+    <Tab active={loc.search.includes('equipment')} icon="dumbbell" label="器材" onClick={() => nav('/personal?section=equipment')} />
+  </nav>
   const cur = loc.pathname.split('/')[1] || 'home'
   const on = k => cur === k || (cur === 'history' && k === 'stats') || (cur === 'settings' && k === 'home') || (cur === 'muscles' && k === 'library') || (cur === 'structural-balance' && k === 'stats')
 

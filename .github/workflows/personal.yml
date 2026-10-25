@@ -1,0 +1,62 @@
+name: OpenGym Personal 验收
+on:
+  push:
+    branches: [feature/personal-gym]
+    paths-ignore: ['docs/**']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['docs/**']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Zurich
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安装锁定依赖
+        run: |
+          npm ci --ignore-scripts --prefix frontend
+          npm ci --ignore-scripts --omit=optional --prefix api
+          npm ci --ignore-scripts --prefix mcp
+      - name: 前端与个人逻辑
+        run: npm test --prefix frontend -- --maxWorkers=2
+      - name: API 与权限测试
+        run: node --test --test-concurrency=2 api/test/*.test.js
+      - name: MCP 只读测试
+        run: npm test --prefix mcp
+      - name: 前端生产构建
+        run: npm run build --prefix frontend
+      - name: 真实 API 与备份恢复
+        run: node scripts/personal/smoke-api.mjs
+      - name: NAS 交付客户端与完整循环恢复
+        run: node scripts/personal/smoke-nas-client.mjs
+      - name: 发布脚本语法检查
+        run: sh -n scripts/personal/deploy-test.sh scripts/personal/release.sh scripts/personal/rollback.sh deploy/personal/nas-handoff.sh
+      - name: 构建独立镜像
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml build
+      - name: 隔离栈健康和权限
+        run: |
+          node scripts/personal/backup.mjs init-test "$GITHUB_WORKSPACE/.local-test"
+          docker compose -p opengym-dev -f deploy/personal/compose.yml up -d --no-build
+          node scripts/personal/wait-health.mjs
+      - name: 手机流程、通行密钥与容器重启
+        env:
+          PERSONAL_TEST_PASSKEY: '1'
+          PERSONAL_TEST_DOCKER_RESTART: '1'
+        run: |
+          python -m pip install -r scripts/personal/browser-requirements.txt
+          python scripts/personal/browser-smoke.py
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/api/data)" = '401'
+          docker compose -p opengym-dev -f deploy/personal/compose.yml restart
+          node scripts/personal/wait-health.mjs
+      - name: 失败时保留隔离栈诊断
+        if: failure()
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml logs --tail=100
+      - name: 停止合成测试栈
+        if: always()
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml down
