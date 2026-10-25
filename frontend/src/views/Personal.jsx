@@ -109,6 +109,6 @@ export default function Personal() {
       <details className="personal-panel"><summary>进度纠正与事件记录</summary><p>仅纠正当前循环；历史训练、组记录和纠正原因始终保留。</p><label>目标阶段<select value={correctTo} onChange={ev => setCorrectTo(ev.target.value)}>{STEPS.map((s, i) => <option value={i} key={s}>{s}</option>)}</select></label><label>纠正原因<input value={reason} onChange={ev => setReason(ev.target.value)} /></label><button onClick={() => act(s => advanceCycle(s, { id: uuid(), today, at: Date.now(), index: Number(correctTo), reason }))}>记录手动纠正</button><ol>{Object.values(S.personalEvents || {}).filter(ev => ev.cycleId === S.personalCycle.id).map(ev => <li key={ev.id}>{ev.day} · {ev.type} · {v?.accepted.some(x => x.id === ev.id) ? '已采用' : '未采用/并发分支'} {ev.reason || ''}</li>)}</ol></details>
     </>}
     {message && <p className="personal-message" role="alert">{message}</p>}
-    <footer className="personal-footer"><button onClick={() => { act(s => { s.personalMode = false }); nav('/home') }}>关闭个人模式，回到原版</button><button onClick={() => nav('/settings')}>账户、同步与提醒</button></footer>
+    <footer className="personal-footer"><button onClick={() => { act(s => { s.personalMode = false }); nav('/home') }}>关闭个人模式，回到原版</button><button onClick={() => nav('/settings')}>账户、同步与提醒</button><a href="https://github.com/huoweihua312-blip/openGym/tree/feature/personal-gym" target="_blank" rel="noopener noreferrer">个人版修改源码 · AGPL</a></footer>
   </main>
 }

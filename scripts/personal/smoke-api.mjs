@@ -2,7 +2,6 @@
 // 使用一次性合成账户验证真实 API 的登录、隔离、409 冲突和进程重启持久化。
 import fs from 'node:fs'
 import path from 'node:path'
-import os from 'node:os'
 import crypto from 'node:crypto'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -13,7 +12,10 @@ import { installPersonalPlan, startPersonalSession, recordPersonalSet } from '..
 import { mergeStates } from '../../frontend/src/lib/sync-merge.js'
 import { initTestRoot, backup, restoreTest } from './backup.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
-const dir = initTestRoot(fs.mkdtempSync(path.join(os.tmpdir(), 'personal-test-smoke-')))
+// Windows 低完整性进程的系统 TEMP 可能无法原子重命名，合成数据固定留在项目内。
+const scratch = path.join(root, '.test-tmp')
+fs.mkdirSync(scratch, { recursive: true })
+const dir = initTestRoot(fs.mkdtempSync(path.join(scratch, 'personal-test-smoke-')))
 const data = path.join(dir, 'data'); fs.mkdirSync(data)
 const password = crypto.randomBytes(24).toString('hex')
 fs.writeFileSync(path.join(data, 'db.json'), JSON.stringify({ users: [{ id: 'synthetic', name: 'Synthetic', created: new Date().toISOString(), pw: { h: await hashPassword(password), set: new Date().toISOString() } }], creds: [], subs: [], invites: [] }))
