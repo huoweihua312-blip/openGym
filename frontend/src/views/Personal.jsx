@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useUI } from '../store/useUI.js'
-import { todayISO } from '../lib/format.js'
+import { todayISO, uid } from '../lib/format.js'
 import { cycleView, advanceCycle, STEPS, sessionComplete } from '../../../api/personal/cycle.js'
 import { installPersonalPlan, startPersonalSession, personalSession, recordPersonalSet, finishPersonalSession, LABELS } from '../lib/personal-session.js'
 import { availableWeights, defaultEquipment, symmetricLoads, calibrationWarning, validateEquipment, loadChangeCost, recommendLoad } from '../lib/personal-equipment.js'
@@ -10,7 +10,8 @@ import { personalAdvice, decidePersonalAdvice } from '../lib/personal-progressio
 import { copyText } from '../lib/clipboard.js'
 import '../personal.css'
 
-const uuid = () => crypto.randomUUID()
+// 普通局域网 HTTP 没有 randomUUID；记录标识复用上游 uid，不降低通行密钥要求。
+const uuid = () => globalThis.crypto?.randomUUID?.() || uid()
 const nameOf = e => LABELS[e.id] || e.id
 const rowsOf = a => a?.entries?.flatMap(e => e.sets.flatMap(r => r.sides ? [r.sides.L, r.sides.R].map(s => ({ ...s, warmup: r.warmup })) : [r])) || []
 export default function Personal() {

@@ -9,6 +9,8 @@ from playwright.sync_api import sync_playwright, expect
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / '.local-test' / 'screenshots'
 OUT.mkdir(parents=True, exist_ok=True)
+BASE = os.environ.get('PERSONAL_TEST_BASE_URL', 'http://localhost:8081')
+assert BASE in ('http://localhost:8081', 'http://localhost:18081'), '仅允许本机测试站或既有 SSH 测试转发'
 
 with sync_playwright() as p:
     browser = p.chromium.launch(channel='chrome', headless=True)
@@ -28,7 +30,7 @@ with sync_playwright() as p:
             'hasUserVerification': True, 'isUserVerified': True,
             'automaticPresenceSimulation': True}})
     print('start local synthetic mobile checks', flush=True)
-    page.goto('http://localhost:8081', wait_until='networkidle')
+    page.goto(BASE, wait_until='networkidle')
     if passkey:
         page.get_by_role('button', name='Create new profile', exact=True).click()
         page.get_by_placeholder('Your name', exact=True).fill('Synthetic-' + uuid.uuid4().hex[:8])
@@ -80,7 +82,7 @@ with sync_playwright() as p:
         # 等待原有同步队列真正落盘，再验证退出和重新登录；不以本机 UI 代替服务端证据。
         synced = False
         for _ in range(20):
-            remote = page.request.get('http://localhost:8081/api/data').json().get('state') or {}
+            remote = page.request.get(BASE + '/api/data').json().get('state') or {}
             if remote.get('personalEvents') and remote.get('workouts'):
                 synced = True
                 break

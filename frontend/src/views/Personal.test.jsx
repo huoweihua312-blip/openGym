@@ -25,6 +25,14 @@ beforeEach(() => {
 })
 afterEach(async () => { await act(async () => root.unmount()); host.remove() })
 describe('个人手机训练集成', () => {
+  it('局域网 HTTP 缺少 randomUUID 时仍可创建个人计划', async () => {
+    vi.stubGlobal('crypto', { randomUUID: undefined })
+    try {
+      await render(); await click('创建个人训练计划')
+      expect(mock.S.personalCycle?.id).toMatch(/^[A-Za-z0-9_-]+$/)
+      expect(mock.S.routines).toHaveLength(3)
+    } finally { vi.unstubAllGlobals() }
+  })
   it('创建计划只增添三个训练日，不删除已有记录', async () => {
     mock.S.workouts = [{ id: 'legacy' }]
     await render(); await click('创建个人训练计划')
