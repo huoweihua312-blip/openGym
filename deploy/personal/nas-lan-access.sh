@@ -21,11 +21,19 @@ evidence="$delivery/access-$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir "$evidence"
 snapshot() { docker inspect --format '{{.Id}} {{.Image}} {{.State.Running}} {{.State.StartedAt}} {{.RestartCount}}' opengym-api-1 opengym-web-1; }
 snapshot > "$evidence/production-before.txt"
-cat > "$evidence/test-override.yml" <<'YAML'
+api_image=$(docker inspect --format '{{.Config.Image}}' opengym-dev-api-1)
+web_image=$(docker inspect --format '{{.Config.Image}}' opengym-dev-web-1)
+case "$api_image" in opengym-personal-api:nas-*) ;; *) exit 1;; esac
+case "$web_image" in opengym-personal-web:nas-*) ;; *) exit 1;; esac
+# 调整入口只改地址，不把后续已修复的 Web 回退到最初部署的镜像。
+cat > "$evidence/test-override.yml" <<YAML
 services:
   api:
+    image: $api_image
     environment:
       PASSWORD_LOGIN: '1'
+  web:
+    image: $web_image
 YAML
 export PERSONAL_TAG="nas-$revision" PERSONAL_DATA_ROOT="$delivery/state"
 export PERSONAL_BIND="$lan" PERSONAL_WEB_PORT=8081 PERSONAL_RP_ID=localhost
