@@ -1,0 +1,46 @@
+name: OpenGym Personal 验收
+on:
+  push:
+    branches: [feature/personal-gym]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      TZ: Europe/Zurich
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: 安装锁定依赖
+        run: |
+          npm ci --ignore-scripts --prefix frontend
+          npm ci --ignore-scripts --omit=optional --prefix api
+          npm ci --ignore-scripts --prefix mcp
+      - name: 前端与个人逻辑
+        run: npm test --prefix frontend -- --maxWorkers=2
+      - name: API 与权限测试
+        run: node --test --test-concurrency=2 api/test/*.test.js
+      - name: MCP 只读测试
+        run: npm test --prefix mcp
+      - name: 前端生产构建
+        run: npm run build --prefix frontend
+      - name: 真实 API 与备份恢复
+        run: node scripts/personal/smoke-api.mjs
+      - name: 构建独立镜像
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml build
+      - name: 隔离栈健康和权限
+        run: |
+          node scripts/personal/backup.mjs init-test "$GITHUB_WORKSPACE/.local-test"
+          docker compose -p opengym-dev -f deploy/personal/compose.yml up -d --no-build
+          curl --fail --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8081/api/health
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/api/data)" = '401'
+          docker compose -p opengym-dev -f deploy/personal/compose.yml restart
+          curl --fail --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8081/api/health
+      - name: 停止合成测试栈
+        if: always()
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml down
