@@ -8,7 +8,7 @@ import { initTestRoot } from './backup.mjs'
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const runtime = initTestRoot(path.join(root, '.local-test'))
 const env = Object.fromEntries(['PATH', 'Path', 'SYSTEMROOT', 'SystemRoot', 'WINDIR', 'TEMP', 'TMP', 'COMSPEC'].filter(k => process.env[k]).map(k => [k, process.env[k]]))
-const api = spawn(process.execPath, ['server.js'], { cwd: path.join(root, 'api'), env: { ...env, PORT: '0', DATA_DIR: path.join(runtime, 'data'),
+const api = spawn(process.execPath, ['server.js'], { cwd: path.join(root, 'api'), env: { ...env, HOST: '127.0.0.1', PORT: '0', DATA_DIR: path.join(runtime, 'data'),
   ORIGIN: 'http://localhost:8081', RP_ID: 'localhost', RP_NAME: 'OpenGym Personal Local Test', FIRST_USER_ADMIN: '1', ALLOW_GUEST: '1', PASSWORD_LOGIN: '0', COACH_DISABLED: '1', AUDIT_LOG: '1' }, stdio: ['ignore', 'pipe', 'pipe'] })
 let web, started = false
 const shutdown = () => { web?.kill(); api.kill(); process.exit() }

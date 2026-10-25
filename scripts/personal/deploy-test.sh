@@ -10,4 +10,4 @@ docker compose -p opengym-dev -f "$source_root/deploy/personal/compose.yml" conf
 docker compose -p opengym-dev -f "$source_root/deploy/personal/compose.yml" build
 docker compose -p opengym-dev -f "$source_root/deploy/personal/compose.yml" up -d --no-build
 docker compose -p opengym-dev -f "$source_root/deploy/personal/compose.yml" ps
-curl --fail --retry 12 --retry-connrefused --retry-delay 2 "http://127.0.0.1:${PERSONAL_WEB_PORT:-8081}/api/health"
+node "$source_root/scripts/personal/wait-health.mjs" "http://127.0.0.1:${PERSONAL_WEB_PORT:-8081}/api/health"

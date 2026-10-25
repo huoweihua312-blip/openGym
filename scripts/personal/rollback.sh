@@ -12,5 +12,6 @@ umask 077
 override="$backup_dir/rollback-override.yml"
 printf 'services:\n  api:\n    image: %s\n  web:\n    image: %s\n' "$api_image" "$web_image" > "$override"
 docker compose -p opengym --project-directory "$prod_root" -f "$prod_root/docker-compose.yml" -f "$override" up -d --no-build
-curl --fail --retry 12 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/api/health
+source_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+node "$source_root/scripts/personal/wait-health.mjs" http://127.0.0.1:8080/api/health
 echo '已回滚镜像；未覆盖训练数据。数据恢复必须另行批准并先在独立测试环境验证。'

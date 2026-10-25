@@ -32,6 +32,6 @@ printf 'services:\n  api:\n    image: opengym-personal-api:%s\n  web:\n    image
 if ! docker compose -p opengym --project-directory "$prod_root" -f "$prod_root/docker-compose.yml" -f "$override" up -d --no-build; then
   sh "$source_root/scripts/personal/rollback.sh" --production-approved "$release_dir"; exit 1
 fi
-if ! curl --fail --retry 12 --retry-connrefused --retry-delay 2 http://127.0.0.1:8080/api/health; then
+if ! node "$source_root/scripts/personal/wait-health.mjs" http://127.0.0.1:8080/api/health; then
   sh "$source_root/scripts/personal/rollback.sh" --production-approved "$release_dir"; exit 1
 fi

@@ -15,6 +15,8 @@ with sync_playwright() as p:
     page = context.new_page()
     errors = []
     page.on('pageerror', lambda e: errors.append(str(e)))
+    page.set_default_timeout(15000)
+    print('start local synthetic mobile checks', flush=True)
     page.goto('http://localhost:8081', wait_until='networkidle')
     page.get_by_role('button', name='Continue without account', exact=True).click()
     page.get_by_role('button', name='个人训练 · 三练一休', exact=True).click()
@@ -32,6 +34,7 @@ with sync_playwright() as p:
     page.reload(wait_until='networkidle')
     expect(page.locator('[aria-label="1-both-撤销完成"]')).to_be_visible()
     expect(page.locator('[role=timer]')).to_contain_text('休息')
+    print('reload passed', flush=True)
     # PWA 的网络断开恢复；仅使用本次生成的草稿。
     page.wait_for_function('navigator.serviceWorker.controller !== null', timeout=15000)
     context.set_offline(True)
@@ -42,9 +45,14 @@ with sync_playwright() as p:
     context.set_offline(False)
     page.reload(wait_until='networkidle')
     expect(page.locator('[aria-label="1-both-次数"]')).to_have_value('11')
+    print('offline round trip passed', flush=True)
     for index in range(4):
-        for button in page.locator('button[aria-label$="完成本组"]').all():
-            button.click()
+        tries = 0
+        while page.locator('button[aria-label$="完成本组"]').count():
+            tries += 1
+            assert tries < 10, page.locator('body').inner_text()
+            page.locator('button[aria-label$="完成本组"]').first.click()
+        print(f'exercise {index + 1} completed', flush=True)
         if index < 3:
             page.get_by_role('button', name='下一动作', exact=True).click()
     finish = page.get_by_role('button', name='完成训练并推进循环', exact=True)

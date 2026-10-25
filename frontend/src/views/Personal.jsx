@@ -47,7 +47,7 @@ export default function Personal() {
   }
   function finish() {
     const id = uuid(), finished = { name: a.name, done, warmDone, day: day || a.d }
-    try { update(s => finishPersonalSession(s, { eventId: id, today, day: day || a.d, now: Date.now() })); setSummary(finished); setMessage('') }
+    try { update(s => finishPersonalSession(s, { eventId: id, today, day: day || a.d, now: Date.now() })); useUI.getState().stopRest?.(); setSummary(finished); setMessage('') }
     catch (e) { setMessage(e.message) }
   }
   const openCoach = async () => {

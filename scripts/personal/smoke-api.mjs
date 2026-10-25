@@ -18,8 +18,8 @@ const data = path.join(dir, 'data'); fs.mkdirSync(data)
 const password = crypto.randomBytes(24).toString('hex')
 fs.writeFileSync(path.join(data, 'db.json'), JSON.stringify({ users: [{ id: 'synthetic', name: 'Synthetic', created: new Date().toISOString(), pw: { h: await hashPassword(password), set: new Date().toISOString() } }], creds: [], subs: [], invites: [] }))
 let server
-async function start() {
-  const child = spawn(process.execPath, ['server.js'], { cwd: path.join(root, 'api'), env: { ...process.env, PORT: '0', DATA_DIR: data,
+async function start(dataRoot = data) {
+  const child = spawn(process.execPath, ['server.js'], { cwd: path.join(root, 'api'), env: { ...process.env, HOST: '127.0.0.1', PORT: '0', DATA_DIR: dataRoot,
     RP_ID: 'localhost', ORIGIN: 'http://localhost:8081', PASSWORD_LOGIN: '1', COACH_DISABLED: '1', ALLOW_GUEST: '0' }, stdio: ['ignore', 'pipe', 'pipe'] })
   let log = ''; child.stdout.on('data', d => { log += d }); child.stderr.on('data', d => { log += d })
   const port = await boundPort(child, () => log); server = child
@@ -50,7 +50,7 @@ try {
   const current = await conflict.json(), merged = mergeStates(tablet, current.state)
   assert.equal((await put(merged, current.rev)).status, 200)
   assert.equal((await fetch(url + '/api/data')).status, 401)
-  await stop(); url = await start(); cookie = await login()
+  await stop(); url = await start()
   const persisted = await read(); assert.equal(Object.keys(persisted.state.personalSets).length, 2)
   await stop()
   const archive = path.join(path.dirname(dir), path.basename(dir) + '-backup')
@@ -58,5 +58,7 @@ try {
   const restored = path.join(path.dirname(dir), path.basename(dir) + '-restored')
   restoreTest(archive, restored)
   assert.equal(fs.readFileSync(path.join(restored, 'data', 'state-synthetic.json'), 'utf8'), fs.readFileSync(path.join(data, 'state-synthetic.json'), 'utf8'))
-  console.log(JSON.stringify({ ok: true, login: true, unauthorizedDenied: true, conflict409: true, groupMerge: true, restartPersistence: true, backupRestore: true, files: saved.files, synthetic: true }))
+  url = await start(path.join(restored, 'data'))
+  const restoredState = await read(); assert.equal(Object.keys(restoredState.state.personalSets).length, 2)
+  console.log(JSON.stringify({ ok: true, login: true, unauthorizedDenied: true, conflict409: true, groupMerge: true, restartPersistence: true, backupRestore: true, restoredAuthentication: true, files: saved.files, synthetic: true }))
 } finally { await stop() }

@@ -31,16 +31,21 @@ jobs:
         run: npm run build --prefix frontend
       - name: 真实 API 与备份恢复
         run: node scripts/personal/smoke-api.mjs
+      - name: 发布脚本语法检查
+        run: sh -n scripts/personal/deploy-test.sh scripts/personal/release.sh scripts/personal/rollback.sh
       - name: 构建独立镜像
         run: docker compose -p opengym-dev -f deploy/personal/compose.yml build
       - name: 隔离栈健康和权限
         run: |
           node scripts/personal/backup.mjs init-test "$GITHUB_WORKSPACE/.local-test"
           docker compose -p opengym-dev -f deploy/personal/compose.yml up -d --no-build
-          curl --fail --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8081/api/health
+          node scripts/personal/wait-health.mjs
           test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8081/api/data)" = '401'
           docker compose -p opengym-dev -f deploy/personal/compose.yml restart
-          curl --fail --retry 20 --retry-connrefused --retry-delay 2 http://127.0.0.1:8081/api/health
+          node scripts/personal/wait-health.mjs
+      - name: 失败时保留隔离栈诊断
+        if: failure()
+        run: docker compose -p opengym-dev -f deploy/personal/compose.yml logs --tail=100
       - name: 停止合成测试栈
         if: always()
         run: docker compose -p opengym-dev -f deploy/personal/compose.yml down
