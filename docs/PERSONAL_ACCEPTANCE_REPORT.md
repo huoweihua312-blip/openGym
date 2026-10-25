@@ -59,6 +59,22 @@
 
 ## 发布与维护
 
+## 交付复核（2026-10-25）
+
+- 复核时远端/本地均为 `b1eedd748c958da4686d91747b04022543400c9b`，工作区干净。PR 当前提交的个人验收 [40168777649](https://github.com/huoweihua312-blip/openGym/actions/runs/40168777649) 成功；此前仅记录个人 CI 成功，不能推广为全部 PR 检查成功。
+- 发现其他 PR 检查：Tests/API 在 API 文档一致性失败。原因是生成器仍引用缓存版本 27，而已提交页面是 28；本次仅对齐生成器，不改变功能或 API。生成并 `--check` 已通过，提交后需复核远端结果。
+- CLA 检查失败原因为 Fork 缺少 `cla-signatures` 分支及未有签署记录。未代签协议、未创建签名记录、未关闭此检查；该项不影响隔离 Docker 构建，但 PR 不能标记所有检查通过。
+- Actions 产物列表为空。已有成功构建的镜像没有保留为可下载文件，也未推 Registry，不能把历史镜像 ID 当作现成部署包。
+- 本次重新验证 NAS：既有 SSH 可登录，Docker/Compose 相关入口存在，当前用户没有 Docker socket 权限，sudo 需要交互授权；浏览器会话可列出但页面控制仍超时。没有改权限、正式容器、正式数据或 Cloudflare。
+- 新增一次性 `nas-handoff.sh`：固定完整源码归档 SHA、校验传输、拒绝已有测试栈/占用端口/非空状态目录，只构建启动重启 `opengym-dev`，并对比正式容器身份/运行时间/重启数。
+- 新增 NAS 合成验收客户端：实际 API 注册/登录、401、409、完整 Push/Pull/Shoulder/Rest、提前休息拒绝、重启后认证和记录恢复。本机独立进程重启演练通过；**这不是实际 NAS 容器验收结果**。NAS 需要一次交互式 Docker 授权后才能执行。
+- 已准备 `PERSONAL_IPHONE_ACCEPTANCE.md`。真实 Safari/PWA/Face ID/锁屏/推送均待实机；仅 PC SSH 转发不能解决 iPhone 的可信 HTTPS 访问。
+- DeepSeek 已获一次短调用、最多 64 输出 tokens 的授权，当前调用次数为 0。未登录时实际服务端不公开 Coach 配置，未读取或复制正式密钥；独立测试配置尚不可用，因此不能声称实际模型连通通过。
+
+最小 NAS 授权是用户在已登录 NAS 的终端里执行准备好的单个交付脚本一次（sudo 提示由用户输入，不传给代理）。不需要把用户加入 Docker 组，不需要免密 sudo、不需要提供 SSH 密码或 Tunnel Token。当前仍未实际部署，后续以 NAS evidence/result.json 和正式容器前后快照为准。
+
+## 维护参考
+
 完整步骤见 `PERSONAL_DEPLOYMENT.md`，审计边界见 `PERSONAL_SECURITY_REVIEW.md`，逐项验收见 `ACCEPTANCE_CHECKLIST.md`。发布脚本必须用户明确批准；实际 NAS 目录/Compose 名称与挂载必须在发布前复核。保留旧镜像，故障只回退镜像；真实数据恢复另行批准。
 
 以后更新先取 upstream 变更，合并到开发分支，在合成数据和独立栈完成相同验收后再申请发布。当前 Git 是原基线的已验证浅历史；网络正常后可补全上游历史，保留原提交关系。所有新增模块集中在 personal 目录，原数据格式和功能保留，降低上游合并成本。

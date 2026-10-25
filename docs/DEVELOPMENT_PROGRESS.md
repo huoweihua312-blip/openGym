@@ -82,6 +82,17 @@ node scripts/personal/local-test.mjs
 
 ## 剩余任务
 
+### 本次交付收尾复核
+
+- 不重复开发模块。复核本地/远端 `b1eedd74`，PR 当前提交个人验收 40168777649 成功，未保留可下载镜像产物。
+- 原 Tests/API 的生成器缓存版本 27 与页面 28 不一致；已对齐生成器并通过 `build-api-docs.mjs --check`。CLA 因 Fork 缺少签名分支/签署记录仍失败，未代签或禁用。
+- NAS 既有 SSH 成功、用户目录可写、Docker 已安装、测试端口空闲，但 Docker socket 仍拒绝、sudo 必须交互。浏览器标签可列出但读取超时。未改权限、正式服务或 Cloudflare。
+- 一次性交付脚本 `deploy/personal/nas-handoff.sh` 与合成客户端已准备：固定源码、独立数据/容器、回环端口，完整循环/重启/再登录自动验证，正式容器只读快照对比。本机进程重启演练通过，实际 NAS 尚待一次 sudo 授权。
+- iPhone 真实验收清单见 `PERSONAL_IPHONE_ACCEPTANCE.md`；真实机测试全部保持未执行。PC SSH 转发不等于 iPhone 已有 HTTPS 入口。
+- DeepSeek 已获一次调用且最多 64 输出 tokens 的授权；当前 0 次调用，未读取或复制正式 Key。独立配置和可用授权会话就绪后才执行。
+
+当前交付脚本只操作 `opengym-dev`，拒绝覆盖现有测试栈或非空状态目录。用户只需一次运行已准备的脚本，不需要提供任何密码给代理或授予永久 Docker 权限。新提交及远端 CI 结果将继续回填。
+
 1. 可用 fnOS Docker 控制入口恢复后再执行 NAS 隔离部署，始终独立端口/数据/认证；当前软件开发与可执行验收已完成。
 2. iPhone 实机、真实 DeepSeek 待验证；新增公网访问须先准备 Access 并由用户明确批准。
 3. 正式配置完整只读审计及真实数据恢复演练仍待 NAS 可用控制入口，不冒称已完成。
