@@ -1,6 +1,7 @@
 import { cycleView } from './cycle.js'
 import { availableWeights, validateEquipment } from './personal-equipment.js'
 import { personalAdvice } from './personal-progression.js'
+import { PERSONAL_COACH_CHANGES } from './coach-policy.js'
 
 // 传给原 Coach 的显式白名单：不递归复制 S、器材备注、会话或凭据。
 export function personalCoachContext(S, today) {
@@ -9,7 +10,8 @@ export function personalCoachContext(S, today) {
   let equipment
   try { equipment = validateEquipment(S.personalEquipment) } catch { return { policy: 'explain-only', step: v?.step || null, equipment: 'invalid-or-missing' } }
   return {
-    policy: 'explain-only',
+    policy: 'user-confirmed-plan-only',
+    allowedConfirmedChanges: PERSONAL_COACH_CHANGES,
     rules: ['Push→Pull→Shoulder/Core→Rest', 'all-required-work-sets-before-advance', 'explicit-natural-rest-day', 'no-model-write-to-history-or-cycle'],
     step: v?.step || null,
     knownWeightsKgPerBell: availableWeights(equipment).slice(0, 100),

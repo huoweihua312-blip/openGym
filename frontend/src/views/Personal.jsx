@@ -98,7 +98,7 @@ export default function Personal() {
             </div>}
           </article>
         }))}
-        <button onClick={openCoach}>复制规则依据并打开 AI 教练</button><p>AI 修改草案需确认。个人循环开启时禁止应用 AI 改写；可在下方关闭个人模式后复核应用。</p>
+        <button onClick={openCoach}>复制规则依据并打开 AI 教练</button><p>AI 草案需逐项确认。允许微调组数、次数、动作顺序和名称；不能改写循环、热身、器材或训练历史。</p>
       </section>}
       {section === 'equipment' && <section className="personal-panel"><h2>少拆一次，多练一组。</h2>
         <label>当前每只哑铃两端各装<select value={mounted} onChange={ev => setMounted(Number(ev.target.value))}>{loads.map((c, i) => <option value={i} key={i}>{c.side.join(' + ') || '空杆'}</option>)}</select></label>
